@@ -1,7 +1,7 @@
 import numpy as np
 import tkinter as tk
-from tkinter import ttk # For themed widgets like sliders
-import matplotlib.pyplot as plt # Still useful for visualizing MFs if uncommented
+from tkinter import ttk  # For themed widgets like sliders
+import matplotlib.pyplot as plt  # Still useful for visualizing MFs if uncommented
 
 
 # --- Manual Membership Functions ---
@@ -16,8 +16,8 @@ def triangular_membership(x, a, b, c):
     Returns:
         float or np.array: Membership degree(s) between 0 and 1.
     """
-    x = np.asarray(x) # Ensure x is a numpy array for vectorized operations
-    
+    x = np.asarray(x)  # Ensure x is a numpy array for vectorized operations
+
     # Initialize output array with zeros
     y = np.zeros_like(x, dtype=float)
 
@@ -28,16 +28,16 @@ def triangular_membership(x, a, b, c):
     # Calculate membership for values between b and c
     mask_bc = (x > b) & (x <= c)
     y[mask_bc] = (c - x[mask_bc]) / (c - b) if (c - b) != 0 else 1.0
-    
+
     # Handle cases where b == a or b == c (single point or step)
-    if b == a and b == c: # Single point at b
+    if b == a and b == c:  # Single point at b
         y[x == b] = 1.0
-    elif b == a: # Step function from b to c
+    elif b == a:  # Step function from b to c
         mask_bc = (x >= b) & (x <= c)
         y[mask_bc] = (c - x[mask_bc]) / (c - b) if (c - b) != 0 else 1.0
-    elif b == c: # Step function from a to b
+    elif b == c:  # Step function from a to b
         mask_ab = (x >= a) & (x <= b)
-        y[mask_ab] = (x[mask_ab] - a) / (b - a) if (b - a) != 0 else 1.0 # Corrected 'x[ab]' to 'x[mask_ab]'
+        y[mask_ab] = (x[mask_ab] - a) / (b - a) if (b - a) != 0 else 1.0
 
     return y
 
@@ -54,7 +54,7 @@ def trapezoidal_membership(x, a, b, c, d):
     Returns:
         float or np.array: Membership degree(s) between 0 and 1.
     """
-    x = np.asarray(x) # Ensure x is a numpy array for vectorized operations
+    x = np.asarray(x)  # Ensure x is a numpy array for vectorized operations
     y = np.zeros_like(x, dtype=float)
 
     # Region 1: a to b (rising slope)
@@ -68,16 +68,17 @@ def trapezoidal_membership(x, a, b, c, d):
     # Region 3: c to d (falling slope)
     mask3 = (x > c) & (x <= d)
     y[mask3] = (d - x[mask3]) / (d - c) if (d - c) != 0 else 1.0
-    
+
     # Handle edge cases for plateaus that are points
-    if b == a: # If left foot and shoulder are the same, it's a triangle or step
+    if b == a:  # If left foot and shoulder are the same, it's a triangle or step
         mask1 = (x >= a) & (x <= b)
-        y[mask1] = 1.0 # Treat as 1.0 at 'a' if it's the start
-    if d == c: # If right foot and shoulder are the same
+        y[mask1] = 1.0  # Treat as 1.0 at 'a' if it's the start
+    if d == c:  # If right foot and shoulder are the same
         mask3 = (x >= c) & (x <= d)
-        y[mask3] = 1.0 # Treat as 1.0 at 'd' if it's the end
+        y[mask3] = 1.0  # Treat as 1.0 at 'd' if it's the end
 
     return y
+
 
 # --- Fuzzy Logic System Class (Manual) ---
 class ManualFuzzyController:
@@ -87,7 +88,7 @@ class ManualFuzzyController:
         self.battery_level_universe = np.arange(0, 101, 1)
         self.time_of_day_universe = np.arange(0, 24, 1)
         # Brightness output universe is now in Nits
-        self.brightness_universe = np.arange(0, 1501, 1) # Max 1500 nits for modern phones
+        self.brightness_universe = np.arange(0, 1501, 1)  # Max 1500 nits for modern phones
 
         # Define membership functions for inputs
         self.ambient_light_mfs = {
@@ -103,14 +104,14 @@ class ManualFuzzyController:
         night_mf_part2 = trapezoidal_membership(self.time_of_day_universe, 19, 21, 23.99, 23.99)
         self.time_of_day_mfs = {
             'day': trapezoidal_membership(self.time_of_day_universe, 7, 9, 17, 19),
-            'night': np.fmax(night_mf_part1, night_mf_part2) # Union (OR) of two fuzzy sets
+            'night': np.fmax(night_mf_part1, night_mf_part2)  # Union (OR) of two fuzzy sets
         }
 
         # Define membership functions for brightness (output) in Nits
         self.brightness_mfs = {
-            'low': triangular_membership(self.brightness_universe, 0, 0, 400), # 0-400 nits
-            'medium': triangular_membership(self.brightness_universe, 200, 600, 1000), # 200-1000 nits, peak at 600
-            'high': triangular_membership(self.brightness_universe, 800, 1200, 1200) # 800-1200 nits, peak at 1200
+            'low': triangular_membership(self.brightness_universe, 0, 0, 400),  # 0-400 nits
+            'medium': triangular_membership(self.brightness_universe, 200, 600, 1000),  # 200-1000 nits, peak at 600
+            'high': triangular_membership(self.brightness_universe, 800, 1200, 1200)  # 800-1200 nits, peak at 1200
         }
 
         # Define rules (antecedent_mfs, consequent_mf_name)
@@ -120,14 +121,14 @@ class ManualFuzzyController:
             # Ambient Light rules (dominant)
             ({'ambient_light': 'dark'}, 'low'),
             ({'ambient_light': 'bright'}, 'high'),
-            
+
             # Battery Level rules (less dominant direct impact)
-            ({'battery_level': 'empty'}, 'low'), # If empty, still low nits target
-            ({'battery_level': 'full'}, 'medium'), # If full, medium nits target (ambient light will push it higher)
-            
+            ({'battery_level': 'empty'}, 'low'),  # If empty, still low nits target
+            ({'battery_level': 'full'}, 'medium'),  # If full, medium nits target (ambient light will push it higher)
+
             # Time of Day rules
-            ({'time_of_day': 'day'}, 'medium'), # Day, medium nits target
-            ({'time_of_day': 'night'}, 'low'), # Night, low nits target
+            ({'time_of_day': 'day'}, 'medium'),  # Day, medium nits target
+            ({'time_of_day': 'night'}, 'low'),  # Night, low nits target
 
             # Combined rules emphasizing ambient light
             # If it's very dark, brightness should be low regardless of other factors
@@ -171,14 +172,14 @@ class ManualFuzzyController:
         Returns:
             dict: {output_mf_name: clipped_mf_array} for each activated output MF.
         """
-        activated_consequents = {} # Stores the max activation for each output MF
+        activated_consequents = {}  # Stores the max activation for each output MF
 
         for rule in self.rules:
             antecedent_conditions = rule[0]
             consequent_mf_name = rule[1]
 
             # Calculate rule strength (alpha-cut)
-            rule_strength = 1.0 # Start with full strength
+            rule_strength = 1.0  # Start with full strength
 
             for input_var, mf_name in antecedent_conditions.items():
                 if input_var == 'ambient_light':
@@ -196,8 +197,8 @@ class ManualFuzzyController:
                 # Get the membership degree of the crisp input in the specified fuzzy set
                 idx = np.argmin(np.abs(universe - inputs[input_var]))
                 membership_degree = mfs[mf_name][idx]
-                
-                rule_strength = min(rule_strength, membership_degree) # AND operation (min)
+
+                rule_strength = min(rule_strength, membership_degree)  # AND operation (min)
 
             # Implication (Mamdani: clip the consequent MF)
             clipped_mf = np.minimum(self.brightness_mfs[consequent_mf_name], rule_strength)
@@ -221,7 +222,7 @@ class ManualFuzzyController:
             np.array: The aggregated output fuzzy set.
         """
         if not activated_consequents:
-            return np.zeros_like(self.brightness_universe, dtype=float) # No rules fired
+            return np.zeros_like(self.brightness_universe, dtype=float)  # No rules fired
 
         # Aggregate using the maximum (union) operator for Mamdani
         aggregated_output = np.zeros_like(self.brightness_universe, dtype=float)
@@ -243,7 +244,7 @@ class ManualFuzzyController:
         denominator = np.sum(aggregated_output)
 
         if denominator == 0:
-            return 0.0 # Avoid division by zero if no rules fired or aggregation is empty
+            return 0.0  # Avoid division by zero if no rules fired or aggregation is empty
         return numerator / denominator
 
     def compute(self, ambient_light, battery_level, time_of_day):
@@ -269,12 +270,64 @@ class ManualFuzzyController:
         return crisp_output_nits
 
 
+# --- Function to draw membership functions ---
+def draw_memberships():
+    """
+    Draws the membership functions used in the project.
+    """
+    controller = ManualFuzzyController()  # Create an instance to access universes and MFs
+
+    # Plot Ambient Light MFs
+    plt.figure(figsize=(8, 5))
+    for name, mf_array in controller.ambient_light_mfs.items():
+        plt.plot(controller.ambient_light_universe, mf_array, label=name)
+    plt.title('Ambient Light Membership Functions')
+    plt.xlabel('Ambient Light (0-100)')
+    plt.ylabel('Membership Degree')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+    # Plot Battery Level MFs
+    plt.figure(figsize=(8, 5))
+    for name, mf_array in controller.battery_level_mfs.items():
+        plt.plot(controller.battery_level_universe, mf_array, label=name)
+    plt.title('Battery Level Membership Functions')
+    plt.xlabel('Battery Level (0-100%)')
+    plt.ylabel('Membership Degree')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+    # Plot Time of Day MFs
+    plt.figure(figsize=(8, 5))
+    for name, mf_array in controller.time_of_day_mfs.items():
+        plt.plot(controller.time_of_day_universe, mf_array, label=name)
+    plt.title('Time of Day Membership Functions')
+    plt.xlabel('Time of Day (0-23 hours)')
+    plt.ylabel('Membership Degree')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+    # Plot Brightness Output MFs
+    plt.figure(figsize=(8, 5))
+    for name, mf_array in controller.brightness_mfs.items():
+        plt.plot(controller.brightness_universe, mf_array, label=name)
+    plt.title('Brightness Output Membership Functions (Nits)')
+    plt.xlabel('Brightness (Nits)')
+    plt.ylabel('Membership Degree')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+
 # --- Tkinter GUI Application ---
 class BrightnessApp:
     def __init__(self, master):
         self.master = master
         master.title("Fuzzy Brightness Recommender (Manual)")
-        master.geometry("500x500") # Increased height for new slider
+        master.geometry("500x550")  # Increased height for new button
 
         # Initialize manual fuzzy controller
         self.fuzzy_controller = ManualFuzzyController()
@@ -284,11 +337,12 @@ class BrightnessApp:
             'ambient_light': {'label': 'Ambient Light (0-100)', 'range': (0, 100), 'initial': 50},
             'battery_level': {'label': 'Battery Level (0-100%)', 'range': (0, 100), 'initial': 75},
             'time_of_day': {'label': 'Time of Day (0-23 hours)', 'range': (0, 23), 'initial': 12},
-            'max_nits': {'label': 'Phone Max Nits (100-1500)', 'range': (100, 1500), 'initial': 800} # New input for max nits
+            'max_nits': {'label': 'Phone Max Nits (100-1500)', 'range': (100, 1500), 'initial': 800}
+            # New input for max nits
         }
 
         self.create_widgets()
-        self.update_brightness() # Initial calculation
+        self.update_brightness()  # Initial calculation
 
     def create_widgets(self):
         # Frame for sliders
@@ -297,7 +351,7 @@ class BrightnessApp:
 
         self.sliders = {}
         self.vars = {}
-        self.formatted_vars = {} # New dictionary to hold formatted string variables
+        self.formatted_vars = {}  # New dictionary to hold formatted string variables
 
         for i, (key, info) in enumerate(self.inputs.items()):
             # Label for the slider
@@ -306,11 +360,10 @@ class BrightnessApp:
 
             # Tkinter variable to hold slider value
             self.vars[key] = tk.DoubleVar(value=info['initial'])
-            self.formatted_vars[key] = tk.StringVar() # Create a StringVar for formatted display
-            
+            self.formatted_vars[key] = tk.StringVar()  # Create a StringVar for formatted display
+
             # Trace the DoubleVar to update the StringVar with formatted value
             self.vars[key].trace_add("write", lambda name, index, mode, k=key: self.update_formatted_value(k))
-
 
             # Horizontal slider (Scale widget)
             slider = ttk.Scale(
@@ -319,7 +372,7 @@ class BrightnessApp:
                 to=info['range'][1],
                 orient="horizontal",
                 variable=self.vars[key],
-                command=lambda val, k=key: self.update_brightness() # Pass key to ensure correct value is read
+                command=lambda val, k=key: self.update_brightness()  # Pass key to ensure correct value is read
             )
             slider.grid(row=i, column=1, sticky="ew", pady=5, padx=5)
             self.sliders[key] = slider
@@ -327,10 +380,10 @@ class BrightnessApp:
             # Value display for the slider, linked to the new formatted_vars
             value_label = ttk.Label(input_frame, textvariable=self.formatted_vars[key])
             value_label.grid(row=i, column=2, sticky="w", pady=5, padx=5)
-            
+
             # Initial update for formatted value
             self.update_formatted_value(key)
-        
+
         # Configure column weights so the slider expands
         input_frame.grid_columnconfigure(1, weight=1)
 
@@ -352,6 +405,9 @@ class BrightnessApp:
         )
         self.brightness_percent_label.pack(pady=5)
 
+        # Button to show membership functions
+        self.show_mf_button = ttk.Button(self.master, text="Show Membership Functions", command=draw_memberships)
+        self.show_mf_button.pack(pady=10)
 
     def update_formatted_value(self, key):
         """Updates the StringVar for a given key with the formatted value."""
@@ -365,7 +421,7 @@ class BrightnessApp:
         ambient_light = self.vars['ambient_light'].get()
         battery_level = self.vars['battery_level'].get()
         time_of_day = self.vars['time_of_day'].get()
-        max_nits = self.vars['max_nits'].get() # Get max nits from the new slider
+        max_nits = self.vars['max_nits'].get()  # Get max nits from the new slider
 
         # Compute recommended brightness in Nits using the manual fuzzy controller
         recommended_nits = self.fuzzy_controller.compute(
@@ -374,7 +430,7 @@ class BrightnessApp:
 
         # Ensure recommended_nits does not exceed max_nits for the specific phone
         recommended_nits = min(recommended_nits, max_nits)
-        recommended_nits = max(recommended_nits, 0) # Ensure it's not negative
+        recommended_nits = max(recommended_nits, 0)  # Ensure it's not negative
 
         # Calculate the percentage based on the phone's max nits
         percentage_brightness = (recommended_nits / max_nits) * 100 if max_nits > 0 else 0
@@ -391,4 +447,5 @@ class BrightnessApp:
 if __name__ == "__main__":
     root = tk.Tk()
     app = BrightnessApp(root)
+    # draw_memberships()
     root.mainloop()
